@@ -86,18 +86,17 @@ export function createRandNet():Network{
      * contact location x / canvas.width
      * contact location y / canvas.height
      * --repeat 5 times---
-     * current time / 10
      * 
      * Length : 18
      */
-    const inputLayer = Array.from({length : 18},() => {
+    const inputLayer = Array.from({length : 17},() => {
         return new iNeuron()
     })
 
     const layerOne = Array.from({ length: 5 }, () =>
         new Neuron(
         getRand(-1, 1),
-        Array.from({ length: 18 }, () => getRand(-1, 1)),
+        Array.from({ length: 17 }, () => getRand(-1, 1)),
         inputLayer
         )
     ) 
@@ -118,6 +117,62 @@ export function createRandNet():Network{
     return new Network(inputLayer,layerOne,layerTwo,outputLayer);
   }
 export function breed (netA : Network, netB : Network):Network{
+    
+    //Input layer is static so just clone it from netA (net b will be the same)
+    const inputLayer = netA.inputLayer;
+    
+    //Create layer one
+    let layerOne : Neuron[] = [];
+    for(let i = 0; i < netA.layerOne.length; i++){
+        let weights : number[] = [];
+        const rand = getRand(-1,1);
 
+        for( let j = 0; j < netA.layerOne[j].weights.length; j++){
+            const inRand = getRand(-1,1);
+            if(inRand < 0){
+                weights.push(netA.layerOne[i].weights[j])
+            } else {
+                weights.push(netB.layerOne[i].weights[j])
+            }
+        }
+        layerOne.push(new Neuron(rand < 0 ? netA.layerOne[i].bias : netB.layerOne[i].bias,weights,inputLayer));
+
+    }
+        
+    //Create layer two
+    let layerTwo : Neuron[] = [];
+    for(let i = 0; i < netA.layerTwo.length; i++){
+        let weights : number[] = [];
+        const rand = getRand(-1,1);
+
+        for( let j = 0; j < netA.layerTwo[j].weights.length; j++){
+            const inRand = getRand(-1,1);
+            if(inRand < 0){
+                weights.push(netA.layerTwo[i].weights[j])
+            } else {
+                weights.push(netB.layerTwo[i].weights[j])
+            }
+        }
+        layerTwo.push(new Neuron(rand < 0 ? netA.layerTwo[i].bias : netB.layerTwo[i].bias,weights,layerOne));
+
+    }
+    //Create output layer
+    let outputLayer : Neuron[] = [];
+    for(let i = 0; i < netA.outputLayer.length; i++){
+        let weights : number[] = [];
+        const rand = getRand(-1,1);
+
+        for( let j = 0; j < netA.outputLayer[j].weights.length; j++){
+            const inRand = getRand(-1,1);
+            if(inRand < 0){
+                weights.push(netA.outputLayer[i].weights[j])
+            } else {
+                weights.push(netB.outputLayer[i].weights[j])
+            }
+        }
+        outputLayer.push(new Neuron(rand < 0 ? netA.outputLayer[i].bias : netB.outputLayer[i].bias,weights,outputLayer));
+
+    }
+    return new Network(inputLayer, layerOne, layerTwo, outputLayer);
 }
 

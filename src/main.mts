@@ -1,7 +1,7 @@
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 const range = canvas.height * 0.05;
-import { Network } from "./nn.mts";
+import { Network, createRandNet } from "./nn.mts";
 function drawCircle(x: number, y: number, radius: number, color: string): void {
   ctx.beginPath();
   ctx.fillStyle = color;
@@ -53,21 +53,18 @@ class Animal {
     this.brain = brain;
     drawCircle(x,y,5,"red");
   }
-  getNearestAnimals() : void{
-    let withinTen : Animal[] = [];
-    for (let i = 0; i < predators.length; i++){
-      const distance = calcDist(this,predators[i]);
-      if(distance < canvas.height/10){
-        withinTen.push(predators[i])
-      }
+  getNearestAnimals() : number[]{
+    const fuckTS : any[] = []
+    let animals : Animal[] = fuckTS.concat(predators,prey);
+    animals.sort((a,b) => calcDist(this,a)-calcDist(this,b));
+    let toReturn : number[] = [];
+
+    for(let i = 0; i < 5; i++){
+      toReturn.push(animals[i].constructor.name=="Prey" ? 1 : 0);
+      toReturn.push(animals[i].x/canvas.width);
+      toReturn.push(animals[i].y/canvas.height);
     }
-    for (let i = 0; i < prey.length; i++){
-      const distance = calcDist(this,prey[i]);
-      if(distance < canvas.height/10){
-        withinTen.push(prey[i])
-      }
-    }
-    this.nearestCreature = withinTen;  
+    return toReturn;
 
   }
   die(): void {
@@ -89,14 +86,15 @@ class Animal {
 }
 
 class Prey extends Animal {
-  constructor(arr: Animal[], x : number, y : number) {
-    super(arr, x, y);
+  timeStandingStill : number = 0;
+  constructor(arr: Animal[], x : number, y : number, brain : Network) {
+    super(arr, x, y,brain);
 
   }
   onTick():void{
     this.getNearestAnimals();
-
-    this.move(getRand(-range, range),getRand(-range, range),true);
+    const proccessed = this.brain.process([this.x,this.y].concat(this.getNearestAnimals()));
+    this.move(proccessed.dx,proccessed.dy,true);
   }
 
 }
@@ -104,17 +102,21 @@ class Prey extends Animal {
 class Predator extends Animal {
   preyEaten: number = 0;
   timer: ReturnType<typeof setTimeout>;
-  constructor(arr: Animal[], x : number, y : number) {
-    super(arr, x, y);
+  hasBeenAdded : boolean = false;
+  constructor(arr: Animal[], x : number, y : number, brain:Network) {
+    super(arr, x, y, brain);
     this.timer = setTimeout(() => {this.die();}, 10000);
 
   }
 
   onTick():void{
     this.getNearestAnimals();
-
     this.move(getRand(-range, range),getRand(-range, range),false);
     this.eat();
+    if(this.preyEaten > 3 &&!this.hasBeenAdded){
+      predadtorsCanBreed.push(this);
+      this.hasBeenAdded = true;
+    }
   }
 
   eat() : void {
@@ -129,37 +131,28 @@ class Predator extends Animal {
     }
   }
 
-  
 
-  /*
-
-    
-    reproduce(){
-    
-    }
-
-    control(){
-    
-    }
-
-  */
 }
 
-const predators: Predator[] = [];
-const prey: Prey[] = []
+let predators: Predator[] = [];
+let prey: Prey[] = []
+
+let predadtorsCanBreed : Predator[] = [];
+let preyCanBreed : Prey[] = [];
 
 for (let i = 0; i < 50; i++){
-  new Predator(predators, getRand(1,window.innerWidth),getRand(1,window.innerHeight));
+  new Predator(predators, getRand(1,window.innerWidth),getRand(1,window.innerHeight),createRandNet());
 }
 for (let i = 0; i < 100; i++){
-  new Prey(prey, getRand(1,window.innerWidth),getRand(1,window.innerHeight));
+  new Prey(prey, getRand(1,window.innerWidth),getRand(1,window.innerHeight),createRandNet());
 }
 
-setInterval(() =>{
-  prey.forEach((i) => {
-    i.onTick();
-  })
-  predators.forEach((i) => {
-    i.onTick();
-  })
-},1000)
+function beignEpoch(){
+  
+}
+
+function endEpoch(){
+  predators = [];
+  prey = [];
+
+}
