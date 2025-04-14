@@ -100,7 +100,7 @@ export function createRandNet():Network{
         Array.from({ length: 18 }, () => getRand(-1, 1)),
         inputLayer
         )
-    )
+    ) 
     const layerTwo = Array.from({ length: 5 }, () =>
         new Neuron(
         getRand(-1, 1),
