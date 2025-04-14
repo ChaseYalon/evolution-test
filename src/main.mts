@@ -1,7 +1,7 @@
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 const range = canvas.height * 0.05;
-
+import { Network } from "./nn.mts";
 function drawCircle(x: number, y: number, radius: number, color: string): void {
   ctx.beginPath();
   ctx.fillStyle = color;
@@ -18,7 +18,7 @@ function eraseCircle(x: number, y: number, radius: number): void {
   // ctx.stroke(); // uncomment this if you also want the outline
 }
 
-function getRand(min : number, max : number) : number {
+export function getRand(min : number, max : number) : number {
   return Math.random() * (max - min) + min;
 }
 
@@ -40,15 +40,17 @@ function clamp(input : number, range : number) {
 }
 
 class Animal {
+  brain : Network
   health: number = 10; // Always between 1 and 10
   nearestCreature : Animal[] = [];
   x : number;
   y : number;
 
-  constructor(private arr: Animal[],x : number, y : number) {
+  constructor(private arr: Animal[],x : number, y : number, brain : Network) {
     this.arr.push(this);
     this.x = x;
     this.y = y;
+    this.brain = brain;
     drawCircle(x,y,5,"red");
   }
   getNearestAnimals() : void{
